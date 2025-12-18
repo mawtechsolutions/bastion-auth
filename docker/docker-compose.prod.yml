@@ -1,0 +1,72 @@
+version: '3.8'
+
+# Production configuration
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bastionauth}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-bastionauth}
+    ports: []  # Don't expose in production
+    networks:
+      - bastionauth-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  redis:
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    ports: []  # Don't expose in production
+    networks:
+      - bastionauth-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  api:
+    build:
+      context: ..
+      dockerfile: packages/server/Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: bastionauth-api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-bastionauth}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-bastionauth}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bastionauth-network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: always
+
+networks:
+  bastionauth-network:
+    driver: bridge
+

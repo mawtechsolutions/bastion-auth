@@ -1,0 +1,252 @@
+/* BastionAuth Sign In Component Styles */
+/* Uses glass-ui inspired design */
+
+.bastion-sign-in {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.bastion-sign-in__header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.bastion-sign-in__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--bastion-text-primary, #1a1a1a);
+}
+
+.bastion-sign-in__subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--bastion-text-secondary, #666);
+}
+
+.bastion-sign-in__footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--bastion-text-secondary, #666);
+}
+
+.bastion-sign-in__footer p {
+  margin: 0;
+}
+
+/* Alert */
+.bastion-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.bastion-alert--error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* OAuth Buttons */
+.bastion-oauth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Divider */
+.bastion-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
+  color: var(--bastion-text-secondary, #999);
+  font-size: 0.875rem;
+}
+
+.bastion-divider::before,
+.bastion-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--bastion-border, rgba(0, 0, 0, 0.1));
+}
+
+.bastion-divider span {
+  padding: 0 1rem;
+}
+
+/* Form */
+.bastion-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bastion-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.bastion-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--bastion-text-primary, #1a1a1a);
+}
+
+.bastion-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--bastion-border, rgba(0, 0, 0, 0.15));
+  border-radius: 8px;
+  background: var(--bastion-input-bg, rgba(255, 255, 255, 0.8));
+  color: var(--bastion-text-primary, #1a1a1a);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.bastion-input::placeholder {
+  color: var(--bastion-text-secondary, #999);
+}
+
+.bastion-input:focus {
+  outline: none;
+  border-color: var(--bastion-primary, #111);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Button */
+.bastion-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.bastion-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bastion-button--primary {
+  background: var(--bastion-primary, #111);
+  color: white;
+  width: 100%;
+}
+
+.bastion-button--primary:hover:not(:disabled) {
+  background: var(--bastion-primary-hover, #333);
+}
+
+.bastion-button--oauth {
+  background: var(--bastion-input-bg, rgba(255, 255, 255, 0.8));
+  color: var(--bastion-text-primary, #1a1a1a);
+  border: 1px solid var(--bastion-border, rgba(0, 0, 0, 0.15));
+  width: 100%;
+}
+
+.bastion-button--oauth:hover:not(:disabled) {
+  background: var(--bastion-input-bg-hover, rgba(255, 255, 255, 0.95));
+  border-color: var(--bastion-border-hover, rgba(0, 0, 0, 0.25));
+}
+
+/* Links */
+.bastion-link {
+  color: var(--bastion-primary, #111);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.bastion-link:hover {
+  text-decoration: underline;
+}
+
+.bastion-forgot-link {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--bastion-primary, #111);
+  text-decoration: none;
+  text-align: right;
+  margin-top: -0.5rem;
+}
+
+.bastion-forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* MFA */
+.bastion-mfa__description {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  color: var(--bastion-text-secondary, #666);
+  text-align: center;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .bastion-sign-in {
+    background: rgba(30, 30, 30, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .bastion-sign-in__title {
+    color: #fff;
+  }
+
+  .bastion-sign-in__subtitle {
+    color: #999;
+  }
+
+  .bastion-label {
+    color: #fff;
+  }
+
+  .bastion-input {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .bastion-input::placeholder {
+    color: #666;
+  }
+
+  .bastion-button--oauth {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .bastion-button--oauth:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .bastion-divider::before,
+  .bastion-divider::after {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .bastion-link,
+  .bastion-forgot-link {
+    color: #fff;
+  }
+}
+

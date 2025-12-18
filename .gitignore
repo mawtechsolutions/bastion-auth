@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!env.example
+
+# Keys (sensitive)
+keys/
+*.pem
+*.key
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Prisma
+packages/server/src/prisma/migrations/**/migration_lock.toml
+
+# Turbo
+.turbo/
+
+# Cache
+.cache/
+*.tsbuildinfo
+
+# OS
+Thumbs.db

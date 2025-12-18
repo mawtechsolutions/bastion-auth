@@ -1,0 +1,66 @@
+{
+  "name": "bastionauth",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enterprise Authentication System - Authentication, fortified.",
+  "author": "BastionAuth <hello@bastionauth.dev>",
+  "license": "MIT",
+  "homepage": "https://bastionauth.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bastionauth/bastionauth.git"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "test": "turbo test",
+    "test:watch": "turbo test:watch",
+    "test:coverage": "turbo test:coverage",
+    "test:e2e": "turbo test:e2e",
+    "typecheck": "turbo typecheck",
+    "clean": "turbo clean && rm -rf node_modules",
+    "db:generate": "pnpm --filter @bastionauth/server db:generate",
+    "db:migrate": "pnpm --filter @bastionauth/server db:migrate",
+    "db:push": "pnpm --filter @bastionauth/server db:push",
+    "db:seed": "pnpm --filter @bastionauth/server db:seed",
+    "db:studio": "pnpm --filter @bastionauth/server db:studio",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down",
+    "docker:logs": "docker-compose -f docker/docker-compose.yml logs -f",
+    "prepare": "husky install",
+    "generate:keys": "bash scripts/generate-keys.sh"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.4",
+    "@commitlint/config-conventional": "^18.4.4",
+    "@playwright/test": "^1.41.0",
+    "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "@vitest/ui": "^1.2.0",
+    "eslint": "^8.56.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.4",
+    "turbo": "^1.11.3",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

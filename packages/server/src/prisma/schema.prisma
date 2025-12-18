@@ -1,0 +1,467 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id                  String    @id @default(uuid()) @db.Uuid
+  email               String    @unique
+  emailVerified       Boolean   @default(false)
+  passwordHash        String?   // Null for OAuth-only users
+  
+  // Profile
+  firstName           String?
+  lastName            String?
+  username            String?   @unique
+  imageUrl            String?
+  
+  // MFA
+  mfaEnabled          Boolean   @default(false)
+  mfaSecret           String?   // Encrypted TOTP secret
+  mfaBackupCodes      String[]  // Encrypted backup codes
+  
+  // Security
+  lockedUntil         DateTime?
+  failedLoginAttempts Int       @default(0)
+  lastFailedLoginAt   DateTime?
+  passwordChangedAt   DateTime?
+  lastSignInAt        DateTime?
+  
+  // Metadata (flexible JSON storage like Clerk)
+  publicMetadata      Json      @default("{}")  // Visible to frontend
+  privateMetadata     Json      @default("{}")  // Server-only
+  unsafeMetadata      Json      @default("{}")  // User-editable
+  
+  // Timestamps
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime? // Soft delete
+  
+  // Relations
+  sessions                Session[]
+  oauthAccounts           OAuthAccount[]
+  memberships             OrganizationMembership[]
+  auditLogs               AuditLog[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  magicLinks              MagicLink[]
+  passkeys                Passkey[]
+  
+  @@index([email])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model Session {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @db.Uuid
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Token (stored as hash, never plain)
+  refreshTokenHash  String        @unique
+  
+  // Device info
+  deviceFingerprint String?
+  ipAddress         String
+  userAgent         String
+  country           String?
+  city              String?
+  
+  // Status
+  status            SessionStatus @default(ACTIVE)
+  
+  // Timestamps
+  expiresAt         DateTime
+  lastActiveAt      DateTime      @default(now())
+  revokedAt         DateTime?
+  createdAt         DateTime      @default(now())
+  
+  @@index([userId])
+  @@index([refreshTokenHash])
+  @@index([expiresAt])
+  @@index([status])
+}
+
+enum SessionStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+model OAuthAccount {
+  id                   String        @id @default(uuid()) @db.Uuid
+  userId               String        @db.Uuid
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  provider             OAuthProvider
+  providerAccountId    String
+  
+  // Tokens (encrypted at rest)
+  accessToken          String?
+  refreshToken         String?
+  accessTokenExpiresAt DateTime?
+  
+  // Profile from provider
+  email                String?
+  name                 String?
+  avatarUrl            String?
+  
+  // Timestamps
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+enum OAuthProvider {
+  GOOGLE
+  GITHUB
+  MICROSOFT
+  APPLE
+  LINKEDIN
+}
+
+// ============================================
+// ORGANIZATIONS & RBAC
+// ============================================
+
+model Organization {
+  id                String    @id @default(uuid()) @db.Uuid
+  
+  // Identity
+  name              String
+  slug              String    @unique
+  imageUrl          String?
+  
+  // Settings
+  maxMembers        Int?      // null = unlimited
+  allowedDomains    String[]  // Email domains for auto-join
+  
+  // Metadata
+  publicMetadata    Json      @default("{}")
+  privateMetadata   Json      @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+  
+  // Relations
+  memberships       OrganizationMembership[]
+  invitations       OrganizationInvitation[]
+  roles             OrganizationRole[]
+  
+  @@index([slug])
+  @@index([deletedAt])
+}
+
+model OrganizationMembership {
+  id               String             @id @default(uuid()) @db.Uuid
+  
+  userId           String             @db.Uuid
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  organizationId   String             @db.Uuid
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Role & Permissions
+  role             String             @default("member")  // owner, admin, member, or custom
+  roleId           String?            @db.Uuid
+  organizationRole OrganizationRole?  @relation(fields: [roleId], references: [id])
+  permissions      String[]           @default([])        // Additional permissions
+  
+  // Timestamps
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([role])
+}
+
+model OrganizationRole {
+  id              String        @id @default(uuid()) @db.Uuid
+  
+  organizationId  String        @db.Uuid
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  name            String        // e.g., "Editor", "Viewer"
+  key             String        // e.g., "editor", "viewer"
+  description     String?
+  permissions     String[]      // e.g., ["read", "write", "delete"]
+  
+  isDefault       Boolean       @default(false)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  memberships     OrganizationMembership[]
+  
+  @@unique([organizationId, key])
+}
+
+model OrganizationInvitation {
+  id              String           @id @default(uuid()) @db.Uuid
+  
+  email           String
+  organizationId  String           @db.Uuid
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  role            String           @default("member")
+  
+  // Invitation token
+  token           String           @unique
+  
+  // Status
+  status          InvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  
+  // Who invited
+  invitedById     String?          @db.Uuid
+  
+  createdAt       DateTime         @default(now())
+  
+  @@index([token])
+  @@index([email])
+  @@index([status])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+// ============================================
+// VERIFICATION & RESET TOKENS
+// ============================================
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([token])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tokenHash String    @unique  // Store hashed, not plain
+  expiresAt DateTime
+  usedAt    DateTime?
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([tokenHash])
+  @@index([userId])
+}
+
+model MagicLink {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String?   @db.Uuid  // Null if user doesn't exist yet
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  email     String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  
+  // Where to redirect after auth
+  redirectUrl String?
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([tokenHash])
+  @@index([email])
+}
+
+// ============================================
+// PASSKEYS (WebAuthn)
+// ============================================
+
+model Passkey {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @db.Uuid
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // WebAuthn credential
+  credentialId        String    @unique
+  publicKey           Bytes
+  counter             BigInt    @default(0)
+  
+  // Device info
+  deviceType          String    // "platform" or "cross-platform"
+  backedUp            Boolean   @default(false)
+  transports          String[]  // "usb", "ble", "nfc", "internal"
+  
+  // User-friendly name
+  name                String    @default("Passkey")
+  
+  // Timestamps
+  createdAt           DateTime  @default(now())
+  lastUsedAt          DateTime?
+  
+  @@index([userId])
+  @@index([credentialId])
+}
+
+// ============================================
+// AUDIT LOGGING
+// ============================================
+
+model AuditLog {
+  id          String      @id @default(uuid()) @db.Uuid
+  
+  // Who
+  userId      String?     @db.Uuid
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  actorType   ActorType   @default(USER)
+  
+  // What
+  action      String      // e.g., "user.signed_in", "user.created", "mfa.enabled"
+  entityType  String?     // e.g., "user", "organization", "session"
+  entityId    String?     // ID of affected entity
+  
+  // Context
+  ipAddress   String
+  userAgent   String
+  country     String?
+  city        String?
+  
+  // Details
+  metadata    Json        @default("{}")  // Action-specific data
+  status      AuditStatus @default(SUCCESS)
+  
+  createdAt   DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+enum ActorType {
+  USER
+  ADMIN
+  SYSTEM
+  API_KEY
+}
+
+enum AuditStatus {
+  SUCCESS
+  FAILURE
+  BLOCKED
+}
+
+// ============================================
+// WEBHOOKS
+// ============================================
+
+model Webhook {
+  id             String            @id @default(uuid()) @db.Uuid
+  
+  // Configuration
+  url            String
+  secret         String            // For signature verification (HMAC)
+  
+  // Events to subscribe to
+  events         String[]          // e.g., ["user.created", "user.signed_in", "session.revoked"]
+  
+  // Status
+  enabled        Boolean           @default(true)
+  
+  // Optional: scope to organization
+  organizationId String?           @db.Uuid
+  
+  // Timestamps
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  
+  // Relations
+  deliveries     WebhookDelivery[]
+  
+  @@index([enabled])
+}
+
+model WebhookDelivery {
+  id           String    @id @default(uuid()) @db.Uuid
+  
+  webhookId    String    @db.Uuid
+  webhook      Webhook   @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  
+  // Event info
+  eventType    String
+  payload      Json
+  
+  // Delivery status
+  statusCode   Int?
+  responseBody String?   @db.Text
+  error        String?
+  
+  // Retry handling
+  attempts     Int       @default(0)
+  maxAttempts  Int       @default(3)
+  nextRetryAt  DateTime?
+  
+  // Timestamps
+  createdAt    DateTime  @default(now())
+  deliveredAt  DateTime?
+  
+  @@index([webhookId])
+  @@index([createdAt])
+  @@index([nextRetryAt])
+}
+
+// ============================================
+// API KEYS (for server-to-server auth)
+// ============================================
+
+model ApiKey {
+  id             String    @id @default(uuid()) @db.Uuid
+  
+  name           String
+  keyHash        String    @unique  // Store hashed, show prefix only
+  keyPrefix      String            // e.g., "ba_live_" or "ba_test_"
+  
+  // Permissions
+  scopes         String[]  @default(["*"])  // e.g., ["users:read", "users:write"]
+  
+  // Optional: scope to organization
+  organizationId String?   @db.Uuid
+  
+  // Usage tracking
+  lastUsedAt     DateTime?
+  usageCount     Int       @default(0)
+  
+  // Status
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  
+  // Timestamps
+  createdAt      DateTime  @default(now())
+  
+  @@index([keyHash])
+  @@index([keyPrefix])
+}
+
