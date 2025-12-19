@@ -3,7 +3,6 @@ import type {
   Session,
   SignInRequest,
   SignUpRequest,
-  TokenPair,
   User,
 } from '@bastionauth/core';
 

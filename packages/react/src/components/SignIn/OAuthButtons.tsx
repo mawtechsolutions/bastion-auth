@@ -1,4 +1,3 @@
-import React from 'react';
 
 import { useBastionContext } from '../../context/BastionProvider.js';
 

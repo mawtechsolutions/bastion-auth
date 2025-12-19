@@ -1,148 +1,349 @@
-import React, { useState } from 'react';
+'use client';
 
+import { useState } from 'react';
+import { GlassCard, GlassButton, GlassInput } from '@mawtech/glass-ui';
+import '@mawtech/glass-ui/styles.css';
+
+// Logo is loaded from public folder as PNG
 import { useSignUp } from '../../hooks/useSignUp.js';
 
-import '../SignIn/SignIn.css';
+const OAUTH_PROVIDERS = [
+  { id: 'google', name: 'Google', icon: GoogleIcon },
+  { id: 'github', name: 'GitHub', icon: GitHubIcon },
+];
+
+function GoogleIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    </svg>
+  );
+}
+
+function GitHubIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+  );
+}
 
 export interface SignUpProps {
-  routing?: 'path' | 'hash' | 'virtual';
-  path?: string;
   signInUrl?: string;
   afterSignUpUrl?: string;
-  appearance?: {
-    elements?: Record<string, React.CSSProperties>;
-    variables?: Record<string, string>;
-  };
+  providers?: ('google' | 'github' | 'apple' | 'microsoft' | 'discord' | 'twitter')[];
+  showOAuth?: boolean;
 }
 
 export function SignUp({
   signInUrl = '/sign-in',
-  afterSignUpUrl = '/',
-  appearance,
+  afterSignUpUrl = '/dashboard',
+  providers = ['google', 'github'],
+  showOAuth = true,
 }: SignUpProps) {
   const { signUp, isLoading, error } = useSignUp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [showVerification, setShowVerification] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalError(null);
 
     try {
-      const result = await signUp({ email, password, firstName, lastName });
-      if (result.user) {
-        window.location.href = afterSignUpUrl;
-      }
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Sign up failed');
+      await signUp({ email, password, firstName, lastName });
+      setShowVerification(true);
+    } catch {
+      // Error is handled by useSignUp
     }
   };
 
-  const displayError = localError || (error?.message ?? null);
+  const handleOAuth = (provider: string) => {
+    window.location.href = `/api/auth/oauth/${provider}`;
+  };
+
+  const filteredProviders = OAUTH_PROVIDERS.filter(p => 
+    providers.includes(p.id as typeof providers[number])
+  );
+
+  if (showVerification) {
+    return (
+      <div className="bastion-signup-container">
+        <GlassCard variant="glow" padding="lg" className="bastion-signup-card">
+          <div className="bastion-signup-header">
+            <img 
+              src="/logos/bastion-logo-nobg.png" 
+              alt="BastionAuth" 
+              width={160} 
+              height={36}
+              style={{ objectFit: 'contain' }}
+            />
+            <h1>Verify your email</h1>
+            <p>We've sent a verification link to {email}</p>
+          </div>
+
+          <div className="bastion-verification-message">
+            <p>Click the link in the email to verify your account and complete sign up.</p>
+            <p className="bastion-spam-note">Check your spam folder if you don't see it.</p>
+          </div>
+
+          <GlassButton 
+            variant="ghost" 
+            fullWidth
+            onClick={() => window.location.href = afterSignUpUrl}
+          >
+            Continue to dashboard →
+          </GlassButton>
+        </GlassCard>
+
+        <style>{signupStyles}</style>
+      </div>
+    );
+  }
 
   return (
-    <div className="bastion-sign-in" style={appearance?.elements?.card}>
-      <div className="bastion-sign-in__header">
-        <h1 className="bastion-sign-in__title">Create an account</h1>
-        <p className="bastion-sign-in__subtitle">
-          Get started with BastionAuth today.
-        </p>
-      </div>
-
-      {displayError && (
-        <div className="bastion-alert bastion-alert--error">
-          {displayError}
+    <div className="bastion-signup-container">
+      <GlassCard variant="glow" padding="lg" className="bastion-signup-card">
+        <div className="bastion-signup-header">
+          <img 
+            src="/logos/bastion-logo-nobg.png" 
+            alt="BastionAuth" 
+            width={160} 
+            height={36}
+            style={{ objectFit: 'contain' }}
+          />
+          <h1>Create account</h1>
+          <p>Get started with BastionAuth</p>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="bastion-form">
-        <div className="bastion-form-row">
-          <div className="bastion-form-field">
-            <label htmlFor="firstName" className="bastion-label">
-              First name
-            </label>
-            <input
-              id="firstName"
+        {showOAuth && filteredProviders.length > 0 && (
+          <>
+            <div className="bastion-oauth-buttons">
+              {filteredProviders.map(provider => (
+                <GlassButton
+                  key={provider.id}
+                  variant="secondary"
+                  onClick={() => handleOAuth(provider.id)}
+                  fullWidth
+                >
+                  <provider.icon />
+                  <span>Continue with {provider.name}</span>
+                </GlassButton>
+              ))}
+            </div>
+
+            <div className="bastion-divider">
+              <span>or</span>
+            </div>
+          </>
+        )}
+
+        {error && (
+          <div className="bastion-error">
+            {error.message}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="bastion-name-row">
+            <GlassInput
+              label="First name"
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              autoComplete="given-name"
-              className="bastion-input"
               placeholder="John"
             />
-          </div>
-
-          <div className="bastion-form-field">
-            <label htmlFor="lastName" className="bastion-label">
-              Last name
-            </label>
-            <input
-              id="lastName"
+            <GlassInput
+              label="Last name"
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              autoComplete="family-name"
-              className="bastion-input"
               placeholder="Doe"
             />
           </div>
-        </div>
 
-        <div className="bastion-form-field">
-          <label htmlFor="email" className="bastion-label">
-            Email
-          </label>
-          <input
-            id="email"
+          <GlassInput
+            label="Email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="bastion-input"
             placeholder="you@example.com"
+            required
           />
-        </div>
 
-        <div className="bastion-form-field">
-          <label htmlFor="password" className="bastion-label">
-            Password
-          </label>
-          <input
-            id="password"
+          <GlassInput
+            label="Password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            autoComplete="new-password"
-            className="bastion-input"
             placeholder="••••••••"
+            required
           />
-          <p className="bastion-hint">Minimum 8 characters</p>
+
+          <div className="bastion-password-hint">
+            Password must be at least 8 characters
+          </div>
+
+          <GlassButton 
+            type="submit" 
+            variant="primary" 
+            fullWidth
+            loading={isLoading}
+          >
+            Create account
+          </GlassButton>
+        </form>
+
+        <div className="bastion-terms">
+          By signing up, you agree to our{' '}
+          <a href="/terms">Terms of Service</a> and{' '}
+          <a href="/privacy">Privacy Policy</a>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="bastion-button bastion-button--primary"
-        >
-          {isLoading ? 'Creating account...' : 'Create account'}
-        </button>
-      </form>
+        <div className="bastion-signin-link">
+          Already have an account? <a href={signInUrl}>Sign in</a>
+        </div>
+      </GlassCard>
 
-      <div className="bastion-sign-in__footer">
-        <p>
-          Already have an account?{' '}
-          <a href={signInUrl} className="bastion-link">
-            Sign in
-          </a>
-        </p>
-      </div>
+      <style>{signupStyles}</style>
     </div>
   );
 }
 
+const signupStyles = `
+  .bastion-signup-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: linear-gradient(135deg, #09090B 0%, #1a1a2e 50%, #16213e 100%);
+  }
+
+  .bastion-signup-card {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .bastion-signup-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .bastion-signup-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 1rem 0 0.5rem;
+  }
+
+  .bastion-signup-header p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+  }
+
+  .bastion-oauth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .bastion-oauth-buttons button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .bastion-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.875rem;
+  }
+
+  .bastion-divider::before,
+  .bastion-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .bastion-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .bastion-name-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .bastion-password-hint {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+    margin-top: -0.5rem;
+  }
+
+  .bastion-terms {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .bastion-terms a {
+    color: #00F0FF;
+    text-decoration: none;
+  }
+
+  .bastion-terms a:hover {
+    text-decoration: underline;
+  }
+
+  .bastion-signin-link {
+    text-align: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+  }
+
+  .bastion-signin-link a {
+    color: #00F0FF;
+    text-decoration: none;
+  }
+
+  .bastion-signin-link a:hover {
+    text-decoration: underline;
+  }
+
+  .bastion-verification-message {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .bastion-spam-note {
+    margin-top: 0.5rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.875rem;
+  }
+`;

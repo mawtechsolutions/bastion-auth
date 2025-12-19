@@ -19,8 +19,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "incremental": true
+    "isolatedModules": true
   },
   "exclude": ["node_modules", "dist", ".next", "coverage"]
 }

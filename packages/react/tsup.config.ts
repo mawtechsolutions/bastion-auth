@@ -8,9 +8,15 @@ export default defineConfig({
   sourcemap: true,
   splitting: false,
   treeshake: true,
-  external: ['react', 'react-dom'],
+  external: ['react', 'react-dom', '@mawtech/glass-ui'],
+  outExtension() {
+    return { js: '.js' };
+  },
   esbuildOptions(options) {
     options.jsx = 'automatic';
+    options.banner = {
+      js: '"use client";',
+    };
   },
 });
 

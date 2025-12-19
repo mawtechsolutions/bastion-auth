@@ -43,8 +43,8 @@ export function OrganizationTable({ organizations }: OrganizationTableProps) {
               <td>
                 <div className="org-cell">
                   <div className="org-logo">
-                    {org.logoUrl ? (
-                      <img src={org.logoUrl} alt="" />
+                    {org.imageUrl ? (
+                      <img src={org.imageUrl} alt="" />
                     ) : (
                       <span>{org.name[0].toUpperCase()}</span>
                     )}

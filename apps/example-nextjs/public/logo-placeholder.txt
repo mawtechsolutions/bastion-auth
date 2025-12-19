@@ -1,0 +1,8 @@
+Please save your BastionAuth logo (PNG format) as:
+- /apps/example-nextjs/public/logo.png
+- /packages/admin/public/logo.png
+
+The logo you provided shows:
+- A shield icon with castle turrets and a key symbol
+- "BastionAuth" text (Bastion in navy blue, Auth in teal)
+- Gradient colors: #2D9E8A (teal) to #1E4A7D (navy blue)

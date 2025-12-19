@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <BastionProvider
           publishableKey={process.env.NEXT_PUBLIC_BASTION_PUBLISHABLE_KEY!}
           apiUrl={process.env.NEXT_PUBLIC_BASTION_API_URL}

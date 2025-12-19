@@ -1,3 +1,5 @@
+'use client';
+
 // Context & Provider
 export { BastionProvider } from './context/BastionProvider.js';
 export type { BastionProviderProps } from './context/BastionProvider.js';
@@ -17,6 +19,9 @@ export { SignUp } from './components/SignUp/index.js';
 export { UserButton } from './components/UserButton/index.js';
 export { ProtectedRoute } from './components/ProtectedRoute.js';
 export { RedirectToSignIn } from './components/RedirectToSignIn.js';
+
+// Logo Components
+export { BastionAuthLogo, BastionAuthIcon, BastionAuthColors } from './assets/logo.js';
 
 // API Client
 export { BastionClient } from './api/client.js';

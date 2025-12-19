@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { auth, currentUser } from '@bastionauth/nextjs/server';
 
@@ -13,9 +14,15 @@ export default async function Home() {
       <Header />
       <main className="container" style={{ paddingTop: '4rem' }}>
         <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
-          <h1 style={{ fontSize: '3rem', fontWeight: 700, marginBottom: '1rem' }}>
-            🏰 BastionAuth
-          </h1>
+          <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+            <img 
+              src="/logos/bastion-logo-nobg.png" 
+              alt="BastionAuth" 
+              width={320}
+              height={80}
+              style={{ objectFit: 'contain' }}
+            />
+          </div>
           <p style={{ fontSize: '1.25rem', color: 'var(--muted-foreground)', marginBottom: '2rem' }}>
             Authentication, fortified.
           </p>

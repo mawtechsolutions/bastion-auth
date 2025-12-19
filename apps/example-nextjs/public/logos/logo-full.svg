@@ -1,0 +1,64 @@
+<svg width="400" height="100" viewBox="0 0 400 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield Base with Gradient -->
+  <defs>
+    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2B9E8B"/>
+      <stop offset="50%" stop-color="#3B8B9E"/>
+      <stop offset="100%" stop-color="#1B4A7D"/>
+    </linearGradient>
+    <linearGradient id="leftTowerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B4A6D"/>
+      <stop offset="100%" stop-color="#1B3A5D"/>
+    </linearGradient>
+    <linearGradient id="rightTowerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2B8B8B"/>
+      <stop offset="100%" stop-color="#3B9B9B"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Main Shield Shape -->
+  <path d="M50 8 L50 65 Q50 85 25 95 Q0 85 0 65 L0 8 Q25 3 50 8 Z" 
+        transform="translate(10, 2)" 
+        fill="url(#shieldGradient)"/>
+  
+  <!-- Left Castle Tower -->
+  <path d="M8 12 L8 28 L12 28 L12 22 L16 22 L16 28 L20 28 L20 22 L24 22 L24 28 L28 28 L28 12 L24 12 L24 8 L20 8 L20 12 L16 12 L16 8 L12 8 L12 12 Z" 
+        transform="translate(10, 2)" 
+        fill="url(#leftTowerGradient)"/>
+  
+  <!-- Right Castle Tower -->
+  <path d="M32 12 L32 28 L36 28 L36 22 L40 22 L40 28 L44 28 L44 22 L48 22 L48 28 L52 28 L52 12 L48 12 L48 8 L44 8 L44 12 L40 12 L40 8 L36 8 L36 12 Z" 
+        transform="translate(6, 2)" 
+        fill="url(#rightTowerGradient)"/>
+  
+  <!-- Key Head (Circle) -->
+  <circle cx="35" cy="38" r="8" fill="white" transform="translate(10, 2)"/>
+  <circle cx="35" cy="38" r="4" fill="url(#shieldGradient)" transform="translate(10, 2)"/>
+  
+  <!-- Key Shaft -->
+  <rect x="32" y="46" width="6" height="28" fill="white" transform="translate(10, 2)"/>
+  
+  <!-- Key Teeth -->
+  <rect x="38" y="58" width="8" height="4" fill="white" transform="translate(10, 2)"/>
+  <rect x="38" y="66" width="6" height="4" fill="white" transform="translate(10, 2)"/>
+  
+  <!-- Bottom Chevron -->
+  <path d="M10 70 L35 90 L60 70 L55 70 L35 85 L15 70 Z" 
+        transform="translate(10, 2)" 
+        fill="#1B4A6D"/>
+  
+  <!-- Text: "Bastion" in navy blue -->
+  <text x="115" y="62" 
+        font-family="'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif" 
+        font-size="42" 
+        font-weight="700" 
+        fill="#1B4A7D">Bastion</text>
+  
+  <!-- Text: "Auth" in teal -->
+  <text x="285" y="62" 
+        font-family="'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif" 
+        font-size="42" 
+        font-weight="700" 
+        fill="#2B9E8B">Auth</text>
+</svg>
+

@@ -25,7 +25,13 @@ export function Header() {
           color: 'inherit',
           fontWeight: 600,
         }}>
-          🏰 BastionAuth
+          <img 
+            src="/logos/bastion-logo-nobg.png" 
+            alt="BastionAuth" 
+            width={160}
+            height={40}
+            style={{ objectFit: 'contain' }}
+          />
         </Link>
 
         <nav style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

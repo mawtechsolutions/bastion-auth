@@ -12,7 +12,7 @@ interface SignInResult {
 }
 
 export function useSignIn() {
-  const { client, _setUser, _setSession } = useBastionContext();
+  const { client, _setUser } = useBastionContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 

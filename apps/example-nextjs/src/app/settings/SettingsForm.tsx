@@ -3,9 +3,14 @@
 import { useState } from 'react';
 
 import { useUser } from '@bastionauth/nextjs';
-import type { User } from '@bastionauth/core';
 
-export function SettingsForm({ user: initialUser }: { user: User | null }) {
+interface UserData {
+  email?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
+export function SettingsForm({ user: initialUser }: { user: UserData | null }) {
   const { user, update, isUpdating } = useUser();
   const currentUser = user || initialUser;
 

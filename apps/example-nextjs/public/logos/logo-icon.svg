@@ -1,0 +1,46 @@
+<svg width="80" height="100" viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield Base with Gradient -->
+  <defs>
+    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2B9E8B"/>
+      <stop offset="50%" stop-color="#3B8B9E"/>
+      <stop offset="100%" stop-color="#1B4A7D"/>
+    </linearGradient>
+    <linearGradient id="leftTowerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B4A6D"/>
+      <stop offset="100%" stop-color="#1B3A5D"/>
+    </linearGradient>
+    <linearGradient id="rightTowerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2B8B8B"/>
+      <stop offset="100%" stop-color="#3B9B9B"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Main Shield Shape -->
+  <path d="M70 8 L70 70 Q70 90 40 100 Q10 90 10 70 L10 8 Q40 0 70 8 Z" 
+        fill="url(#shieldGradient)"/>
+  
+  <!-- Left Castle Tower -->
+  <path d="M14 14 L14 32 L18 32 L18 24 L22 24 L22 32 L26 32 L26 24 L30 24 L30 32 L34 32 L34 14 L30 14 L30 10 L26 10 L26 14 L22 14 L22 10 L18 10 L18 14 Z" 
+        fill="url(#leftTowerGradient)"/>
+  
+  <!-- Right Castle Tower -->
+  <path d="M46 14 L46 32 L50 32 L50 24 L54 24 L54 32 L58 32 L58 24 L62 24 L62 32 L66 32 L66 14 L62 14 L62 10 L58 10 L58 14 L54 14 L54 10 L50 10 L50 14 Z" 
+        fill="url(#rightTowerGradient)"/>
+  
+  <!-- Key Head (Circle) -->
+  <circle cx="40" cy="42" r="10" fill="white"/>
+  <circle cx="40" cy="42" r="5" fill="url(#shieldGradient)"/>
+  
+  <!-- Key Shaft -->
+  <rect x="36" y="52" width="8" height="32" fill="white"/>
+  
+  <!-- Key Teeth -->
+  <rect x="44" y="66" width="10" height="5" fill="white"/>
+  <rect x="44" y="76" width="8" height="5" fill="white"/>
+  
+  <!-- Bottom Chevron -->
+  <path d="M18 72 L40 92 L62 72 L56 72 L40 86 L24 72 Z" 
+        fill="#1B4A6D"/>
+</svg>
+

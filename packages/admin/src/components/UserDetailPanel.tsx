@@ -3,14 +3,19 @@
 import type { User } from '@bastionauth/core';
 import { formatRelativeTime } from '@bastionauth/core';
 
+interface AdminUser extends User {
+  hasPassword?: boolean;
+  suspendedAt?: Date | null;
+  bannedAt?: Date | null;
+  oauthAccounts?: Array<{
+    provider: string;
+    providerAccountId: string;
+    createdAt: string;
+  }>;
+}
+
 interface UserDetailPanelProps {
-  user: User & {
-    oauthAccounts?: Array<{
-      provider: string;
-      providerAccountId: string;
-      createdAt: string;
-    }>;
-  };
+  user: AdminUser;
 }
 
 export function UserDetailPanel({ user }: UserDetailPanelProps) {
@@ -63,7 +68,7 @@ export function UserDetailPanel({ user }: UserDetailPanelProps) {
             <div className="detail-item">
               <dt>Has Password</dt>
               <dd>
-                {user.passwordHash ? (
+                {user.hasPassword ? (
                   <span className="badge badge-success">Yes</span>
                 ) : (
                   <span className="badge badge-default">No</span>
