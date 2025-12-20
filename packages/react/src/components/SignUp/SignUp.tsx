@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { GlassCard, GlassButton, GlassInput } from '@mawtech/glass-ui';
 import '@mawtech/glass-ui/styles.css';
 
-// Logo is loaded from public folder as PNG
+import { BastionAuthLogo } from '../../assets/logo.js';
 import { useSignUp } from '../../hooks/useSignUp.js';
 
 const OAUTH_PROVIDERS = [
@@ -75,13 +75,7 @@ export function SignUp({
       <div className="bastion-signup-container">
         <GlassCard variant="glow" padding="lg" className="bastion-signup-card">
           <div className="bastion-signup-header">
-            <img 
-              src="/logos/bastion-logo-nobg.png" 
-              alt="BastionAuth" 
-              width={160} 
-              height={36}
-              style={{ objectFit: 'contain' }}
-            />
+            <BastionAuthLogo width={180} height={45} />
             <h1>Verify your email</h1>
             <p>We've sent a verification link to {email}</p>
           </div>
@@ -109,13 +103,7 @@ export function SignUp({
     <div className="bastion-signup-container">
       <GlassCard variant="glow" padding="lg" className="bastion-signup-card">
         <div className="bastion-signup-header">
-          <img 
-            src="/logos/bastion-logo-nobg.png" 
-            alt="BastionAuth" 
-            width={160} 
-            height={36}
-            style={{ objectFit: 'contain' }}
-          />
+          <BastionAuthLogo width={180} height={45} />
           <h1>Create account</h1>
           <p>Get started with BastionAuth</p>
         </div>
