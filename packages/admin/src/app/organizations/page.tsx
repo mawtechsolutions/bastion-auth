@@ -1,94 +1,266 @@
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { GlassCard, GlassButton } from '@mawtech/glass-ui';
 
 import { OrganizationTable } from '@/components/OrganizationTable';
 
-interface SearchParams {
-  page?: string;
-  search?: string;
+interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl: string | null;
+  createdAt: string;
+  _count?: {
+    members: number;
+  };
 }
 
-async function getOrganizations(searchParams: SearchParams) {
-  const apiUrl = process.env.BASTION_API_URL || 'http://localhost:3001';
-  const page = searchParams.page || '1';
-  const search = searchParams.search || '';
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+function OrganizationsPageContent() {
+  const searchParams = useSearchParams();
+  const page = searchParams.get('page') || '1';
+  const search = searchParams.get('search') || '';
   
-  const url = new URL(`${apiUrl}/api/v1/admin/organizations`);
-  url.searchParams.set('page', page);
-  url.searchParams.set('limit', '20');
-  if (search) url.searchParams.set('search', search);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 });
+  const [searchQuery, setSearchQuery] = useState(search);
+  const [isLoading, setIsLoading] = useState(true);
 
-  try {
-    const response = await fetch(url.toString(), {
-      headers: {
-        Authorization: `Bearer ${process.env.ADMIN_TOKEN}`,
-      },
-      cache: 'no-store',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch organizations');
-    }
-    
-    return response.json();
-  } catch (error) {
-    console.error('Failed to fetch organizations:', error);
-    return { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
-  }
-}
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      setIsLoading(true);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_BASTION_API_URL || 'http://localhost:3001';
+        const url = new URL(`${apiUrl}/api/v1/admin/organizations`);
+        url.searchParams.set('page', page);
+        url.searchParams.set('limit', '20');
+        if (search) url.searchParams.set('search', search);
 
-export default async function OrganizationsPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
-  const { data: organizations, pagination } = await getOrganizations(searchParams);
+        const response = await fetch(url.toString(), {
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setOrganizations(data.data || []);
+          setPagination(data.pagination || { page: 1, limit: 20, total: 0, totalPages: 0 });
+        }
+      } catch (error) {
+        console.error('Failed to fetch organizations:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchOrganizations();
+  }, [page, search]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    window.location.href = `/organizations?${params.toString()}`;
+  };
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div className="page-header-row">
         <div>
           <h1 className="page-title">Organizations</h1>
           <p className="page-description">Manage organizations and their members</p>
         </div>
-        <form method="GET" action="/organizations">
-          <input
-            type="search"
-            name="search"
-            placeholder="Search organizations..."
-            defaultValue={searchParams.search}
-            className="input search-input"
-          />
-        </form>
-      </div>
-
-      <div className="card">
-        <OrganizationTable organizations={organizations} />
-        
-        <div className="pagination">
-          <span className="pagination-info">
-            Showing {organizations.length} of {pagination.total} organizations
-          </span>
-          <div className="pagination-buttons">
-            {pagination.page > 1 && (
-              <Link
-                href={`/organizations?page=${pagination.page - 1}${searchParams.search ? `&search=${searchParams.search}` : ''}`}
-                className="btn btn-ghost btn-sm"
-              >
-                Previous
-              </Link>
-            )}
-            {pagination.page < pagination.totalPages && (
-              <Link
-                href={`/organizations?page=${pagination.page + 1}${searchParams.search ? `&search=${searchParams.search}` : ''}`}
-                className="btn btn-ghost btn-sm"
-              >
-                Next
-              </Link>
-            )}
-          </div>
+        <div className="page-actions">
+          <form onSubmit={handleSearch} className="search-form">
+            <div className="search-wrapper">
+              <SearchIcon />
+              <input
+                type="search"
+                placeholder="Search organizations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="input search-input"
+              />
+            </div>
+          </form>
+          <GlassButton variant="primary">
+            <PlusIcon />
+            Create Organization
+          </GlassButton>
         </div>
       </div>
+
+      <GlassCard variant="glow" padding="none">
+        {isLoading ? (
+          <div className="loading-state">
+            <div className="loading-spinner" />
+            <p>Loading organizations...</p>
+          </div>
+        ) : (
+          <>
+            <OrganizationTable organizations={organizations} />
+            
+            <div className="pagination">
+              <span className="pagination-info">
+                Showing {organizations.length} of {pagination.total} organizations
+              </span>
+              <div className="pagination-buttons">
+                {pagination.page > 1 && (
+                  <Link
+                    href={`/organizations?page=${pagination.page - 1}${search ? `&search=${search}` : ''}`}
+                    className="btn btn-ghost btn-sm"
+                  >
+                    ← Previous
+                  </Link>
+                )}
+                <span className="pagination-current">
+                  Page {pagination.page} of {pagination.totalPages || 1}
+                </span>
+                {pagination.page < pagination.totalPages && (
+                  <Link
+                    href={`/organizations?page=${pagination.page + 1}${search ? `&search=${search}` : ''}`}
+                    className="btn btn-ghost btn-sm"
+                  >
+                    Next →
+                  </Link>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </GlassCard>
+
+      <style jsx>{`
+        .page-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 2rem;
+          gap: 1.5rem;
+          flex-wrap: wrap;
+        }
+
+        .page-actions {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .search-form {
+          margin: 0;
+        }
+
+        .search-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .search-wrapper :global(svg) {
+          position: absolute;
+          left: 1rem;
+          color: rgba(248, 250, 252, 0.4);
+          pointer-events: none;
+        }
+
+        .search-input {
+          width: 280px;
+          padding-left: 2.75rem;
+        }
+
+        .loading-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 4rem;
+          color: rgba(248, 250, 252, 0.4);
+          gap: 1rem;
+        }
+
+        .loading-spinner {
+          width: 32px;
+          height: 32px;
+          border: 3px solid rgba(0, 240, 255, 0.1);
+          border-top-color: #00F0FF;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .pagination {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1.5rem;
+          border-top: 1px solid rgba(0, 240, 255, 0.1);
+        }
+
+        .pagination-info {
+          font-size: 0.875rem;
+          color: rgba(248, 250, 252, 0.4);
+        }
+
+        .pagination-buttons {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .pagination-current {
+          font-size: 0.875rem;
+          color: rgba(248, 250, 252, 0.6);
+          padding: 0 0.5rem;
+        }
+      `}</style>
     </>
   );
 }
 
+export default function OrganizationsPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <OrganizationsPageContent />
+    </Suspense>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem', color: 'rgba(248, 250, 252, 0.4)', gap: '1rem' }}>
+      <div style={{ width: 32, height: 32, border: '3px solid rgba(0, 240, 255, 0.1)', borderTopColor: '#00F0FF', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <p>Loading...</p>
+    </div>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
