@@ -14,7 +14,9 @@ export function OAuthButtons({ mode }: OAuthButtonsProps) {
   const { client } = useBastionContext();
 
   const handleOAuth = (provider: string) => {
-    window.location.href = client.getOAuthUrl(provider);
+    const url = client.getOAuthUrl(provider);
+    console.log('OAuth URL:', url);
+    window.location.href = url;
   };
 
   return (

@@ -8,6 +8,7 @@ export default function SignInPage() {
 
   useEffect(() => {
     setMounted(true);
+    console.log('SignInPage mounted');
   }, []);
 
   return (

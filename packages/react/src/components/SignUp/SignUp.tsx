@@ -6,6 +6,7 @@ import '@mawtech/glass-ui/styles.css';
 
 import { BastionAuthLogo } from '../../assets/logo.js';
 import { useSignUp } from '../../hooks/useSignUp.js';
+import { useBastionContext } from '../../context/BastionProvider.js';
 
 const OAUTH_PROVIDERS = [
   { id: 'google', name: 'Google', icon: GoogleIcon },
@@ -45,6 +46,7 @@ export function SignUp({
   showOAuth = true,
 }: SignUpProps) {
   const { signUp, isLoading, error } = useSignUp();
+  const { client } = useBastionContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -60,10 +62,6 @@ export function SignUp({
     } catch {
       // Error is handled by useSignUp
     }
-  };
-
-  const handleOAuth = (provider: string) => {
-    window.location.href = `/api/auth/oauth/${provider}`;
   };
 
   const filteredProviders = OAUTH_PROVIDERS.filter(p => 
@@ -112,15 +110,14 @@ export function SignUp({
           <>
             <div className="bastion-oauth-buttons">
               {filteredProviders.map(provider => (
-                <GlassButton
+                <a
                   key={provider.id}
-                  variant="secondary"
-                  onClick={() => handleOAuth(provider.id)}
-                  fullWidth
+                  href={client.getOAuthUrl(provider.id)}
+                  className="bastion-oauth-button"
                 >
                   <provider.icon />
                   <span>Continue with {provider.name}</span>
-                </GlassButton>
+                </a>
               ))}
             </div>
 
@@ -241,11 +238,27 @@ const signupStyles = `
     margin-bottom: 1.5rem;
   }
 
-  .bastion-oauth-buttons button {
+  .bastion-oauth-button {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .bastion-oauth-button:hover {
+    background: rgba(0, 240, 255, 0.1);
+    border-color: rgba(0, 240, 255, 0.5);
   }
 
   .bastion-divider {
