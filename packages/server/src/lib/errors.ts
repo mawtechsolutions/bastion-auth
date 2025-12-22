@@ -156,6 +156,9 @@ export const Errors = {
   oauthAccountExists: () =>
     new ApiError(ERROR_CODES.OAUTH_ACCOUNT_EXISTS),
 
+  oauthProviderNotConfigured: (provider: string) =>
+    new ApiError(ERROR_CODES.OAUTH_ERROR, `OAuth provider '${provider}' is not configured`),
+
   // Webhook
   webhookNotFound: () =>
     new ApiError(ERROR_CODES.WEBHOOK_NOT_FOUND),

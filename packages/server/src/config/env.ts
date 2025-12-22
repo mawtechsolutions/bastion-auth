@@ -1,4 +1,11 @@
 import { z } from 'zod';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env from project root
+config({ path: resolve(process.cwd(), '../../.env') });
+// Also try loading from current directory (when running from root)
+config({ path: resolve(process.cwd(), '.env') });
 
 const envSchema = z.object({
   // Server

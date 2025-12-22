@@ -16,11 +16,13 @@ import {
   signInRateLimit,
   signUpRateLimit,
 } from '../middleware/rateLimit.js';
-import { AuthService, emailService } from '../services/index.js';
+import { AuthService, emailService, OAuthService } from '../services/index.js';
 import { getClientIp, getGeoFromIp, generateDeviceFingerprint } from '../utils/fingerprint.js';
+import { env } from '../config/env.js';
 
 export async function authRoutes(fastify: FastifyInstance) {
   const authService = new AuthService(fastify.prisma, fastify.redis);
+  const oauthService = new OAuthService(fastify.prisma, fastify.redis);
 
   // ============================================
   // SIGN UP
@@ -522,6 +524,132 @@ export async function authRoutes(fastify: FastifyInstance) {
         success: true,
         message: 'Magic link sent to email',
       });
+    }
+  );
+
+  // ============================================
+  // OAUTH - INITIATE
+  // ============================================
+  fastify.get(
+    '/oauth/:provider',
+    {
+      schema: {
+        tags: ['Auth', 'OAuth'],
+        summary: 'Initiate OAuth flow',
+        params: {
+          type: 'object',
+          required: ['provider'],
+          properties: {
+            provider: { type: 'string', enum: ['google', 'github', 'microsoft', 'apple', 'linkedin'] },
+          },
+        },
+        querystring: {
+          type: 'object',
+          properties: {
+            redirect_uri: { type: 'string' },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { provider } = request.params as { provider: 'google' | 'github' | 'microsoft' | 'apple' | 'linkedin' };
+      const { redirect_uri } = request.query as { redirect_uri?: string };
+
+      // Check if provider is configured
+      if (!oauthService.isProviderConfigured(provider)) {
+        throw Errors.oauthProviderNotConfigured(provider);
+      }
+
+      const redirectUri = redirect_uri || `${env.API_URL}/api/v1/auth/oauth/${provider}/callback`;
+
+      const { redirectUrl } = await oauthService.initiateOAuth(provider, redirectUri);
+
+      return reply.redirect(redirectUrl);
+    }
+  );
+
+  // ============================================
+  // OAUTH - CALLBACK
+  // ============================================
+  fastify.get(
+    '/oauth/:provider/callback',
+    {
+      schema: {
+        tags: ['Auth', 'OAuth'],
+        summary: 'OAuth callback handler',
+        params: {
+          type: 'object',
+          required: ['provider'],
+          properties: {
+            provider: { type: 'string', enum: ['google', 'github', 'microsoft', 'apple', 'linkedin'] },
+          },
+        },
+        querystring: {
+          type: 'object',
+          properties: {
+            code: { type: 'string' },
+            state: { type: 'string' },
+            error: { type: 'string' },
+            error_description: { type: 'string' },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { provider } = request.params as { provider: string };
+      const { code, state, error, error_description } = request.query as {
+        code?: string;
+        state?: string;
+        error?: string;
+        error_description?: string;
+      };
+
+      // Handle OAuth error
+      if (error) {
+        const errorMessage = error_description || error;
+        return reply.redirect(`${env.FRONTEND_URL}/sign-in?error=${encodeURIComponent(errorMessage)}`);
+      }
+
+      if (!code || !state) {
+        return reply.redirect(`${env.FRONTEND_URL}/sign-in?error=missing_oauth_params`);
+      }
+
+      try {
+        const geo = await getGeoFromIp(getClientIp(request));
+
+        const result = await oauthService.handleCallback(code, state, {
+          ipAddress: getClientIp(request),
+          userAgent: request.headers['user-agent'] || '',
+          deviceFingerprint: generateDeviceFingerprint(request),
+          country: geo.country || undefined,
+          city: geo.city || undefined,
+        });
+
+        // Create audit log
+        await createAuditLog(request, {
+          userId: result.user.id,
+          action: result.isNewUser ? 'user.sign_up_oauth' : 'user.sign_in_oauth',
+          entityType: 'user',
+          entityId: result.user.id,
+          metadata: { provider },
+        });
+
+        // Set refresh token cookie
+        reply.setCookie('refresh_token', result.tokens.refreshToken, {
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+        });
+
+        // Redirect to frontend with access token
+        const successUrl = `${env.FRONTEND_URL}/oauth/callback?token=${result.tokens.accessToken}&expiresIn=${result.tokens.expiresIn}`;
+        return reply.redirect(successUrl);
+      } catch (err: any) {
+        console.error('OAuth callback error:', err);
+        return reply.redirect(`${env.FRONTEND_URL}/sign-in?error=${encodeURIComponent(err.message || 'oauth_failed')}`);
+      }
     }
   );
 }
