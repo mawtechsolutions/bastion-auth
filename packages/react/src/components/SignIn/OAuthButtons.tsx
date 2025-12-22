@@ -13,24 +13,17 @@ const OAUTH_PROVIDERS = [
 export function OAuthButtons({ mode }: OAuthButtonsProps) {
   const { client } = useBastionContext();
 
-  const handleOAuth = (provider: string) => {
-    const url = client.getOAuthUrl(provider);
-    console.log('OAuth URL:', url);
-    window.location.href = url;
-  };
-
   return (
     <div className="bastion-oauth-buttons">
       {OAUTH_PROVIDERS.map((provider) => (
-        <button
+        <a
           key={provider.id}
-          type="button"
-          onClick={() => handleOAuth(provider.id)}
+          href={client.getOAuthUrl(provider.id)}
           className="bastion-button bastion-button--oauth"
         >
           <provider.icon />
           <span>Continue with {provider.name}</span>
-        </button>
+        </a>
       ))}
     </div>
   );
