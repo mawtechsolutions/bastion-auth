@@ -35,8 +35,8 @@ COPY packages/core ./packages/core
 COPY packages/server ./packages/server
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 
-# Generate Prisma client
-RUN cd packages/server && pnpm db:generate
+# Generate Prisma client (schema is in src/prisma/)
+RUN cd packages/server && npx prisma generate --schema=src/prisma/schema.prisma
 
 # Build core first, then server
 RUN pnpm --filter @bastionauth/core build
