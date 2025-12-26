@@ -22,17 +22,7 @@ RUN cd packages/server && pnpm prisma generate --schema=src/prisma/schema.prisma
 RUN pnpm --filter @bastionauth/core build
 RUN pnpm --filter @bastionauth/server build
 
-# Deploy server with all its dependencies
-RUN pnpm --filter @bastionauth/server deploy --prod /app/deploy
-
-# Copy Prisma schema
-RUN cp -r packages/server/src/prisma /app/deploy/prisma
-
-# Copy the generated Prisma client from the builder (pnpm stores it in .pnpm)
-RUN mkdir -p /app/deploy/node_modules/.prisma
-RUN cp -r /app/node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client /app/deploy/node_modules/.prisma/
-
-# Runner stage
+# Runner stage - using full node_modules instead of pnpm deploy
 FROM node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat openssl
 
@@ -44,8 +34,17 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 bastionauth
 
-# Copy deployed application
-COPY --from=builder /app/deploy ./
+# Copy built server
+COPY --from=builder /app/packages/server/dist ./dist
+COPY --from=builder /app/packages/server/package.json ./
+COPY --from=builder /app/packages/server/src/prisma ./prisma
+
+# Copy built core
+COPY --from=builder /app/packages/core/dist ./node_modules/@bastionauth/core/dist
+COPY --from=builder /app/packages/core/package.json ./node_modules/@bastionauth/core/
+
+# Copy all node_modules (includes Prisma client)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Set ownership
 RUN chown -R bastionauth:nodejs /app
