@@ -54,5 +54,5 @@ EXPOSE 3001
 ENV PORT=3001
 ENV HOST=0.0.0.0
 
-# Run migrations then start server (use local prisma to avoid version mismatch)
-CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma && node dist/index.js"]
+# Start server (migrations should be run manually or via CI/CD)
+CMD ["node", "dist/index.js"]
