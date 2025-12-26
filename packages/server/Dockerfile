@@ -63,8 +63,8 @@ COPY --from=builder /app/packages/core/package.json ./node_modules/@bastionauth/
 
 # Copy Prisma files for migrations
 COPY --from=builder /app/packages/server/src/prisma ./prisma
-COPY --from=builder /app/node_modules/.pnpm/@prisma+client@*/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/packages/server/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/packages/server/node_modules/@prisma ./node_modules/@prisma
 
 # Set ownership
 RUN chown -R bastionauth:nodejs /app
