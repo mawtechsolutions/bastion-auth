@@ -16,11 +16,18 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 
 # Generate Prisma client
-RUN cd packages/server && npx prisma generate --schema=src/prisma/schema.prisma
+RUN cd packages/server && pnpm prisma generate --schema=src/prisma/schema.prisma
 
 # Build packages
 RUN pnpm --filter @bastionauth/core build
 RUN pnpm --filter @bastionauth/server build
+
+# Deploy server with all its dependencies
+RUN pnpm --filter @bastionauth/server deploy --prod /app/deploy
+
+# Copy Prisma files and generated client to deploy folder
+RUN cp -r packages/server/src/prisma /app/deploy/prisma
+RUN cp -r node_modules/.pnpm/@prisma+client@*/node_modules/.prisma /app/deploy/node_modules/.prisma 2>/dev/null || true
 
 # Runner stage
 FROM node:20-alpine AS runner
@@ -34,15 +41,8 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 bastionauth
 
-# Copy everything needed to run
-COPY --from=builder /app/packages/server/dist ./dist
-COPY --from=builder /app/packages/server/package.json ./
-COPY --from=builder /app/packages/server/src/prisma ./prisma
-COPY --from=builder /app/packages/core/dist ./packages/core/dist
-COPY --from=builder /app/packages/core/package.json ./packages/core/
-
-# Copy node_modules with Prisma client
-COPY --from=builder /app/node_modules ./node_modules
+# Copy deployed application
+COPY --from=builder /app/deploy ./
 
 # Set ownership
 RUN chown -R bastionauth:nodejs /app
@@ -54,5 +54,5 @@ EXPOSE 3001
 ENV PORT=3001
 ENV HOST=0.0.0.0
 
-# Start server (migrations should be run manually or via CI/CD)
+# Start server
 CMD ["node", "dist/index.js"]
