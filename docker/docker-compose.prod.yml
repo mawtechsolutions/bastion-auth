@@ -82,7 +82,7 @@ services:
       # Redis
       REDIS_URL: redis://:${REDIS_PASSWORD:-bastionauth}@redis:6379
       
-      # URLs
+      # URLs (your domain)
       API_URL: https://api.bastionauth.dev
       FRONTEND_URL: https://app.bastionauth.dev
       ADMIN_URL: https://admin.bastionauth.dev
