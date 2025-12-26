@@ -28,9 +28,9 @@ RUN pnpm --filter @bastionauth/server deploy --prod /app/deploy
 # Copy Prisma schema
 RUN cp -r packages/server/src/prisma /app/deploy/prisma
 
-# Re-generate Prisma client in the deploy folder
+# Re-generate Prisma client in the deploy folder using local prisma
 WORKDIR /app/deploy
-RUN npx prisma generate --schema=prisma/schema.prisma
+RUN ./node_modules/.bin/prisma generate --schema=prisma/schema.prisma
 
 # Runner stage
 FROM node:20-alpine AS runner
