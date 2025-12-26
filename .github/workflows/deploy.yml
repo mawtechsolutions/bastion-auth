@@ -5,10 +5,9 @@
 # This workflow automatically deploys to VPS when pushing to main
 #
 # Required GitHub Secrets:
-#   - VPS_HOST: Your VPS IP address (72.62.129.59)
+#   - VPS_HOST: Your VPS IP address
 #   - VPS_USER: SSH user (root)
 #   - VPS_SSH_KEY: Private SSH key for authentication
-#   - VPS_PORT: SSH port (default: 22)
 #
 # ============================================
 
@@ -64,12 +63,6 @@ jobs:
       - name: Build packages
         run: pnpm build
 
-      - name: Run linting
-        run: pnpm lint || true
-
-      - name: Run type check
-        run: pnpm typecheck || true
-
   # ==========================================
   # Deploy to VPS
   # ==========================================
@@ -86,12 +79,13 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
+          port: 22
+          command_timeout: 30m
           script: |
             echo "🚀 Starting deployment..."
             
             # Navigate to project directory
-            cd ${{ env.DEPLOY_PATH }}
+            cd /root/bastionauth
             
             # Pull latest changes
             echo "📦 Pulling latest code..."
@@ -128,7 +122,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
+          port: 22
           script: |
             echo "🏥 Running health checks..."
             
@@ -141,6 +135,6 @@ jobs:
             fi
             
             # Check container status
-            cd ${{ env.DEPLOY_PATH }}/docker
+            cd /root/bastionauth/docker
             docker compose -f docker-compose.prod.yml ps
 
