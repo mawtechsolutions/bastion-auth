@@ -8,6 +8,8 @@ export default defineConfig({
   sourcemap: true,
   splitting: false,
   treeshake: true,
+  // Bundle all dependencies except native modules
+  noExternal: [/^(?!@prisma\/client).*/],
   external: ['@prisma/client'],
 });
 
