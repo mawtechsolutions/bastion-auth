@@ -8,8 +8,11 @@ export default defineConfig({
   sourcemap: true,
   splitting: false,
   treeshake: true,
-  // Bundle all dependencies except native modules
-  noExternal: [/^(?!@prisma\/client).*/],
-  external: ['@prisma/client'],
+  // External native modules that can't be bundled
+  external: [
+    '@prisma/client',
+    '@node-rs/argon2',
+    '@simplewebauthn/server',
+  ],
 });
 
