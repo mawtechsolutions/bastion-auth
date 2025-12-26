@@ -96,6 +96,9 @@ services:
       # Encryption
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Encryption key required}
       
+      # CSRF Protection
+      CSRF_SECRET: ${CSRF_SECRET:-${ENCRYPTION_KEY}}
+      
       # Email (SMTP)
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
