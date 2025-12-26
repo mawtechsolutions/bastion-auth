@@ -96,7 +96,7 @@ todos:
       - example-app
 ---
 
-# BastionAuth - Enterprise Authentication System
+# loBastionAuth - Enterprise Authentication System
 
 ## Architecture Overview
 
@@ -1008,6 +1008,3 @@ These diagrams are written in **Mermaid** format and can be rendered in:
 - GitBook / Docusaurus documentation
 - Notion
 - VS Code with Mermaid extension
-- https://mermaid.live for quick preview
-
-For the **bastionauth.dev** documentation site, these diagrams provide:

@@ -30,13 +30,18 @@ export class BastionClient {
 
   constructor(config: BastionClientConfig) {
     this.apiUrl = config.apiUrl || 'https://api.bastionauth.dev';
+    // Try to load token from cookie on initialization
+    if (typeof document !== 'undefined') {
+      this.accessToken = this.getSessionCookie();
+    }
   }
 
   /**
-   * Set the access token
+   * Set the access token and store in cookie for SSR
    */
   setAccessToken(token: string | null) {
     this.accessToken = token;
+    this.setSessionCookie(token);
   }
 
   /**
@@ -44,6 +49,37 @@ export class BastionClient {
    */
   getAccessToken(): string | null {
     return this.accessToken;
+  }
+
+  /**
+   * Store session token in cookie for middleware access
+   */
+  private setSessionCookie(token: string | null) {
+    if (typeof document === 'undefined') return;
+    
+    if (token) {
+      // Set cookie with SameSite=Lax to be accessible on navigation
+      document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+    } else {
+      // Clear the cookie
+      document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
+  }
+
+  /**
+   * Get session token from cookie
+   */
+  private getSessionCookie(): string | null {
+    if (typeof document === 'undefined') return null;
+    
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === '__session' && value) {
+        return value;
+      }
+    }
+    return null;
   }
 
   /**
@@ -120,15 +156,16 @@ export class BastionClient {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
+          body: JSON.stringify({}), // Send empty body to satisfy Fastify JSON parser
         });
 
         if (!response.ok) {
-          this.accessToken = null;
+          this.setAccessToken(null);
           throw new Error('Token refresh failed');
         }
 
         const data = await response.json();
-        this.accessToken = data.accessToken;
+        this.setAccessToken(data.accessToken);
       } finally {
         this.refreshPromise = null;
       }
@@ -150,7 +187,7 @@ export class BastionClient {
       body: JSON.stringify(data),
     });
 
-    this.accessToken = result.tokens.accessToken;
+    this.setAccessToken(result.tokens.accessToken);
     return result;
   }
 
@@ -167,7 +204,7 @@ export class BastionClient {
     );
 
     if ('tokens' in result) {
-      this.accessToken = result.tokens.accessToken;
+      this.setAccessToken(result.tokens.accessToken);
     }
 
     return result;
@@ -186,7 +223,7 @@ export class BastionClient {
       body: JSON.stringify({ mfaChallengeId, code, method }),
     });
 
-    this.accessToken = result.tokens.accessToken;
+    this.setAccessToken(result.tokens.accessToken);
     return result;
   }
 
@@ -194,8 +231,11 @@ export class BastionClient {
    * Sign out
    */
   async signOut(): Promise<void> {
-    await this.request('/api/v1/auth/sign-out', { method: 'POST' });
-    this.accessToken = null;
+    await this.request('/api/v1/auth/sign-out', { 
+      method: 'POST',
+      body: JSON.stringify({}), // Send empty body to satisfy Fastify JSON parser
+    });
+    this.setAccessToken(null);
   }
 
   /**

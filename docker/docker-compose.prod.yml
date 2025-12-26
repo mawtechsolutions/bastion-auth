@@ -1,72 +1,183 @@
+# ============================================
+# BastionAuth - Production Docker Compose
+# ============================================
+# 
+# Usage:
+#   cd docker
+#   cp env.example .env
+#   # Edit .env with your values
+#   docker-compose -f docker-compose.prod.yml up -d
+#
+# Prerequisites:
+#   - Copy env.example to .env and configure
+#   - Ensure nginx-proxy-manager network exists
+#
+# ============================================
+
 version: '3.8'
 
-# Production configuration
-# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
 services:
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
   postgres:
+    image: postgres:15-alpine
+    container_name: bastionauth-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-bastionauth}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB: ${POSTGRES_DB:-bastionauth}
-    ports: []  # Don't expose in production
+      POSTGRES_USER: ${DB_USER:-bastionauth}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Database password required}
+      POSTGRES_DB: ${DB_NAME:-bastionauth}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bastionauth}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
-      - bastionauth-network
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
+      - bastionauth-internal
 
+  # ==========================================
+  # Redis Cache & Sessions
+  # ==========================================
   redis:
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
-    ports: []  # Don't expose in production
+    image: redis:7-alpine
+    container_name: bastionauth-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-bastionauth}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-bastionauth}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
-      - bastionauth-network
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
+      - bastionauth-internal
 
-  api:
+  # ==========================================
+  # BastionAuth API Server
+  # ==========================================
+  server:
     build:
       context: ..
       dockerfile: packages/server/Dockerfile
-      args:
-        NODE_ENV: production
-    container_name: bastionauth-api
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-bastionauth}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-bastionauth}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-    ports:
-      - "3001:3001"
+    image: bastionauth/server:latest
+    container_name: bastionauth-server
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOST: 0.0.0.0
+      
+      # Database
+      DATABASE_URL: postgresql://${DB_USER:-bastionauth}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-bastionauth}?schema=public
+      
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-bastionauth}@redis:6379
+      
+      # URLs
+      API_URL: https://api.bastionauth.dev
+      FRONTEND_URL: https://app.bastionauth.dev
+      ADMIN_URL: https://admin.bastionauth.dev
+      
+      # JWT
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY:?JWT private key required}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:?JWT public key required}
+      JWT_ACCESS_TOKEN_EXPIRES_IN: 15m
+      JWT_REFRESH_TOKEN_EXPIRES_IN: 7d
+      
+      # Encryption
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Encryption key required}
+      
+      # Email (SMTP)
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@bastionauth.dev}
+      
+      # OAuth (optional)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+    ports:
+      - "3001:3001"
     networks:
-      - bastionauth-network
-    deploy:
-      replicas: 2
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: always
+      - bastionauth-internal
+      - nginx-proxy-manager_default
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
+  # ==========================================
+  # BastionAuth Admin Dashboard
+  # ==========================================
+  admin:
+    build:
+      context: ..
+      dockerfile: packages/admin/Dockerfile
+    image: bastionauth/admin:latest
+    container_name: bastionauth-admin
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_BASTION_API_URL: https://api.bastionauth.dev
+      NEXT_PUBLIC_SIGN_OUT_REDIRECT_URL: https://admin.bastionauth.dev/sign-in
+    ports:
+      - "3002:3002"
+    networks:
+      - bastionauth-internal
+      - nginx-proxy-manager_default
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # ==========================================
+  # BastionAuth Example App
+  # ==========================================
+  example:
+    build:
+      context: ..
+      dockerfile: apps/example-nextjs/Dockerfile
+    image: bastionauth/example:latest
+    container_name: bastionauth-example
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_BASTION_API_URL: https://api.bastionauth.dev
+      NEXT_PUBLIC_BASTION_PUBLISHABLE_KEY: ${PUBLISHABLE_KEY:-pk_live_bastionauth}
+    ports:
+      - "3000:3000"
+    networks:
+      - bastionauth-internal
+      - nginx-proxy-manager_default
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+# ==========================================
+# Volumes
+# ==========================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ==========================================
+# Networks
+# ==========================================
 networks:
-  bastionauth-network:
+  bastionauth-internal:
     driver: bridge
-
+  nginx-proxy-manager_default:
+    external: true

@@ -1,10 +1,10 @@
 import { defineConfig } from 'tsup';
 
-export default defineConfig({
+export default defineConfig((options) => ({
   entry: ['src/index.ts'],
   format: ['esm'],
   dts: true,
-  clean: true,
+  clean: !options.watch, // Only clean on full builds, not watch mode
   sourcemap: true,
   splitting: false,
   treeshake: true,
@@ -12,11 +12,11 @@ export default defineConfig({
   outExtension() {
     return { js: '.js' };
   },
-  esbuildOptions(options) {
-    options.jsx = 'automatic';
-    options.banner = {
-      js: '"use client";',
-    };
+  banner: {
+    js: '"use client";',
   },
-});
+  esbuildOptions(esbuildOpts) {
+    esbuildOpts.jsx = 'automatic';
+  },
+}));
 
