@@ -12,8 +12,12 @@ RUN corepack enable && corepack prepare pnpm@9 --activate
 # Copy all files
 COPY . .
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Set pnpm to hoist all dependencies (flat node_modules like npm)
+RUN echo "shamefully-hoist=true" >> .npmrc
+RUN echo "node-linker=hoisted" >> .npmrc
+
+# Install dependencies with hoisting (can't use frozen-lockfile with new npmrc)
+RUN pnpm install
 
 # Generate Prisma client
 RUN cd packages/server && pnpm prisma generate --schema=src/prisma/schema.prisma
@@ -22,7 +26,7 @@ RUN cd packages/server && pnpm prisma generate --schema=src/prisma/schema.prisma
 RUN pnpm --filter @bastionauth/core build
 RUN pnpm --filter @bastionauth/server build
 
-# Runner stage - using full node_modules instead of pnpm deploy
+# Runner stage
 FROM node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat openssl
 
@@ -43,7 +47,7 @@ COPY --from=builder /app/packages/server/src/prisma ./prisma
 COPY --from=builder /app/packages/core/dist ./node_modules/@bastionauth/core/dist
 COPY --from=builder /app/packages/core/package.json ./node_modules/@bastionauth/core/
 
-# Copy all node_modules (includes Prisma client)
+# Copy node_modules (hoisted - flat structure)
 COPY --from=builder /app/node_modules ./node_modules
 
 # Set ownership
