@@ -12,15 +12,15 @@
     "@bastionauth/core": "workspace:*",
     "@bastionauth/nextjs": "workspace:*",
     "@mawtech/glass-ui": "^0.1.0",
-    "next": "^14.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "next": "^16.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@types/node": "^20.11.0",
-    "@types/react": "^18.2.48",
-    "@types/react-dom": "^18.2.18",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "eslint-config-next": "^16.1.1",
     "typescript": "^5.3.3"
   }
