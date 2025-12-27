@@ -20,12 +20,13 @@ function SignInForm() {
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_BASTION_API_URL || 'http://localhost:3001';
+      // Use the API URL from env or default - must be set at build time for client components
+      const apiUrl = process.env.NEXT_PUBLIC_BASTION_API_URL || 'https://api.bastionauth.dev';
       const response = await fetch(`${apiUrl}/api/v1/auth/sign-in`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ identifier: email, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
