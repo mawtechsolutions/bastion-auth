@@ -3,7 +3,7 @@
 # ============================================
 
 # Stage 1: Dependencies
-FROM node:20-alpine AS deps
+FROM node:25-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -21,7 +21,7 @@ COPY packages/admin/package.json ./packages/admin/
 RUN pnpm install --frozen-lockfile
 
 # Stage 2: Builder
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -48,7 +48,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @bastionauth/admin build
 
 # Stage 3: Runner
-FROM node:20-alpine AS runner
+FROM node:25-alpine AS runner
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
