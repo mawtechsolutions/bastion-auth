@@ -16,11 +16,28 @@ let privateKey: KeyLike | null = null;
 let publicKey: KeyLike | null = null;
 
 /**
+ * Decode a PEM key - handles both raw PEM and base64-encoded PEM
+ */
+function decodePemKey(key: string): string {
+  // If it starts with the PEM header, it's already decoded
+  if (key.startsWith('-----BEGIN')) {
+    return key;
+  }
+  // Otherwise, assume it's base64 encoded
+  try {
+    return Buffer.from(key, 'base64').toString('utf-8');
+  } catch {
+    return key;
+  }
+}
+
+/**
  * Get the private key for signing JWTs
  */
 async function getPrivateKey(): Promise<KeyLike> {
   if (!privateKey) {
-    privateKey = await importPKCS8(env.JWT_PRIVATE_KEY, TOKEN_CONFIG.JWT_ALGORITHM);
+    const pemKey = decodePemKey(env.JWT_PRIVATE_KEY);
+    privateKey = await importPKCS8(pemKey, TOKEN_CONFIG.JWT_ALGORITHM);
   }
   return privateKey;
 }
@@ -30,7 +47,8 @@ async function getPrivateKey(): Promise<KeyLike> {
  */
 async function getPublicKey(): Promise<KeyLike> {
   if (!publicKey) {
-    publicKey = await importSPKI(env.JWT_PUBLIC_KEY, TOKEN_CONFIG.JWT_ALGORITHM);
+    const pemKey = decodePemKey(env.JWT_PUBLIC_KEY);
+    publicKey = await importSPKI(pemKey, TOKEN_CONFIG.JWT_ALGORITHM);
   }
   return publicKey;
 }
