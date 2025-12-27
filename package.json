@@ -47,17 +47,17 @@
     "@commitlint/config-conventional": "^18.4.4",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.41.0",
-    "@types/node": "^20.11.0",
+    "@types/node": "^25.0.3",
     "@vitest/coverage-v8": "^1.2.0",
     "@vitest/ui": "^1.2.0",
-    "eslint": "^8.56.0",
+    "eslint": "^9.39.2",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",
     "prettier": "^3.2.4",
     "turbo": "^1.11.3",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.50.1",
-    "vitest": "^1.2.0"
+    "vitest": "^4.0.16"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
