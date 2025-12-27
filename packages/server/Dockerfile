@@ -2,7 +2,7 @@
 # BastionAuth Server - Production Dockerfile
 # ============================================
 
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
@@ -27,7 +27,7 @@ RUN pnpm --filter @bastionauth/core build
 RUN pnpm --filter @bastionauth/server build
 
 # Runner stage
-FROM node:20-alpine AS runner
+FROM node:25-alpine AS runner
 RUN apk add --no-cache libc6-compat openssl
 
 WORKDIR /app
