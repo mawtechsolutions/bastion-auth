@@ -32,7 +32,20 @@ const mockEmailService = {
 
 describe('Auth Service', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Reset all mocks completely (clears both calls AND queued return values)
+    mockPrisma.user.findUnique.mockReset();
+    mockPrisma.user.findFirst.mockReset();
+    mockPrisma.user.create.mockReset();
+    mockPrisma.user.update.mockReset();
+    mockPrisma.session.create.mockReset();
+    mockPrisma.session.deleteMany.mockReset();
+    mockPrisma.emailVerificationToken.create.mockReset();
+    mockPrisma.passwordResetToken.create.mockReset();
+    mockPrisma.passwordResetToken.findFirst.mockReset();
+    mockPrisma.passwordResetToken.delete.mockReset();
+    mockEmailService.sendVerificationEmail.mockReset();
+    mockEmailService.sendPasswordResetEmail.mockReset();
+    mockEmailService.sendWelcomeEmail.mockReset();
   });
 
   describe('signUp', () => {

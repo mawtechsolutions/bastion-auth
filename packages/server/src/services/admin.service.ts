@@ -77,10 +77,34 @@ export class AdminService {
   async getUser(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        emailVerified: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        imageUrl: true,
+        mfaEnabled: true,
+        publicMetadata: true,
+        privateMetadata: true,
+        unsafeMetadata: true,
+        createdAt: true,
+        updatedAt: true,
+        lastSignInAt: true,
+        lockedUntil: true,
+        deletedAt: true,
+        // Explicitly exclude passwordHash for security
         sessions: {
           where: { status: 'ACTIVE' },
           orderBy: { lastActiveAt: 'desc' },
+          select: {
+            id: true,
+            ipAddress: true,
+            userAgent: true,
+            lastActiveAt: true,
+            createdAt: true,
+          },
         },
         oauthAccounts: {
           select: {
@@ -123,6 +147,25 @@ export class AdminService {
     return this.prisma.user.update({
       where: { id: userId },
       data,
+      select: {
+        id: true,
+        email: true,
+        emailVerified: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        imageUrl: true,
+        mfaEnabled: true,
+        publicMetadata: true,
+        privateMetadata: true,
+        unsafeMetadata: true,
+        createdAt: true,
+        updatedAt: true,
+        lastSignInAt: true,
+        lockedUntil: true,
+        deletedAt: true,
+        // Explicitly exclude passwordHash
+      },
     });
   }
 

@@ -1,0 +1,146 @@
+# ============================================
+# BastionAuth Alerting Rules
+# ============================================
+
+groups:
+  - name: bastionauth
+    rules:
+      # ==========================================
+      # Service Availability
+      # ==========================================
+      - alert: BastionAuthDown
+        expr: bastionauth_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BastionAuth API is down"
+          description: "BastionAuth API has been down for more than 1 minute."
+
+      - alert: BastionAuthDatabaseDown
+        expr: bastionauth_database_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BastionAuth database is down"
+          description: "Database connection has been down for more than 1 minute."
+
+      - alert: BastionAuthRedisDown
+        expr: bastionauth_redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BastionAuth Redis is down"
+          description: "Redis connection has been down for more than 1 minute."
+
+      # ==========================================
+      # Performance
+      # ==========================================
+      - alert: BastionAuthSlowDatabase
+        expr: bastionauth_database_response_time_ms > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database response time is slow"
+          description: "Database response time has been over 1 second for 5 minutes."
+
+      - alert: BastionAuthSlowRedis
+        expr: bastionauth_redis_response_time_ms > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis response time is slow"
+          description: "Redis response time has been over 100ms for 5 minutes."
+
+      # ==========================================
+      # Security Events
+      # ==========================================
+      - alert: HighFailedLoginRate
+        expr: rate(bastionauth_auth_failures_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate of failed login attempts"
+          description: "More than 10 failed login attempts per second for 2 minutes. Possible brute force attack."
+
+      - alert: SuspiciousLoginPattern
+        expr: rate(bastionauth_auth_failures_total[1m]) > 50
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Suspicious login activity detected"
+          description: "More than 50 failed login attempts per second. Likely brute force or credential stuffing attack."
+
+      # ==========================================
+      # Resource Usage
+      # ==========================================
+      - alert: HighActiveSessionCount
+        expr: bastionauth_active_sessions > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of active sessions"
+          description: "There are more than 10,000 active sessions. Consider scaling."
+
+  - name: infrastructure
+    rules:
+      # ==========================================
+      # System Resources
+      # ==========================================
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for 5 minutes."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% for 5 minutes."
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk space is below 10%."
+
+  - name: database
+    rules:
+      # ==========================================
+      # PostgreSQL
+      # ==========================================
+      - alert: PostgresConnectionsNearMax
+        expr: pg_stat_activity_count / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL connections near maximum"
+          description: "PostgreSQL is using over 80% of available connections."
+
+      - alert: PostgresReplicationLag
+        expr: pg_replication_lag > 60
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL replication lag"
+          description: "PostgreSQL replication lag is over 60 seconds."
+

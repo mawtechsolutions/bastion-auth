@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 
-import { Sidebar } from '@/components/Sidebar';
-import { Header } from '@/components/Header';
+import { AdminLayout } from '@/components/AdminLayout';
 
 import './globals.css';
 
@@ -23,16 +22,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body suppressHydrationWarning>
-        <div className="admin-bg" />
-        <div className="admin-layout">
-          <Sidebar />
-          <div className="admin-main">
-            <Header />
-            <main className="admin-content">
-              {children}
-            </main>
-          </div>
-        </div>
+        <AdminLayout>{children}</AdminLayout>
       </body>
     </html>
   );

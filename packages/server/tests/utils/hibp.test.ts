@@ -1,16 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import crypto from 'crypto';
 import { isPasswordBreached } from '../../src/utils/hibp';
 
 describe('HaveIBeenPwned Utilities', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('isPasswordBreached', () => {
     it('should return true for a breached password', async () => {
-      const mockResponse = '00D4F6E8FA6EECAD2A3AA415EEC418D38EC:5\r\n1234567890ABCDEF1234567890ABCDEF123:10';
+      // SHA-1 of 'password123' is CBFDAC6008F9CAB4083784CBD1874F76618D2A97
+      // Prefix: CBFDA, Suffix: C6008F9CAB4083784CBD1874F76618D2A97
+      const suffix = 'C6008F9CAB4083784CBD1874F76618D2A97';
+      const mockResponse = `${suffix}:12345\r\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:5`;
       
-      vi.mocked(global.fetch).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(mockResponse),
       } as Response);
@@ -22,9 +26,10 @@ describe('HaveIBeenPwned Utilities', () => {
     });
 
     it('should return false for a non-breached password', async () => {
+      // Return a response that doesn't contain the hash suffix for our test password
       const mockResponse = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:5\r\nBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB:10';
       
-      vi.mocked(global.fetch).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(mockResponse),
       } as Response);
@@ -35,15 +40,16 @@ describe('HaveIBeenPwned Utilities', () => {
     });
 
     it('should return false when API fails', async () => {
-      vi.mocked(global.fetch).mockRejectedValueOnce(new Error('Network error'));
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network error'));
       
       const result = await isPasswordBreached('password123');
       
+      // Should fail open - not blocking user registration
       expect(result).toBe(false);
     });
 
     it('should return false when API returns non-OK status', async () => {
-      vi.mocked(global.fetch).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 500,
       } as Response);
@@ -54,13 +60,14 @@ describe('HaveIBeenPwned Utilities', () => {
     });
 
     it('should use k-anonymity by only sending hash prefix', async () => {
-      vi.mocked(global.fetch).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(''),
       } as Response);
       
       await isPasswordBreached('test123');
       
+      // Verify only the first 5 characters of SHA-1 hash are sent
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringMatching(/^https:\/\/api\.pwnedpasswords\.com\/range\/[A-F0-9]{5}$/),
         expect.any(Object)

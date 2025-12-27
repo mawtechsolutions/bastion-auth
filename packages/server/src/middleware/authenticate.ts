@@ -12,6 +12,19 @@ declare module 'fastify' {
     sessionId?: string;
     orgId?: string;
     orgRole?: string;
+    orgMembership?: {
+      id: string;
+      userId: string;
+      organizationId: string;
+      role: string;
+      permissions: string[];
+      organizationRole?: {
+        id: string;
+        name: string;
+        key: string;
+        permissions: string[];
+      } | null;
+    };
   }
 }
 

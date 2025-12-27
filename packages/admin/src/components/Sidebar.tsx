@@ -12,7 +12,7 @@ interface NavItem {
 
 const OVERVIEW_NAV: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: DashboardIcon },
-  { href: '/users', label: 'Users', icon: UsersIcon, count: 1247 },
+  { href: '/users', label: 'Users', icon: UsersIcon },
   { href: '/organizations', label: 'Organizations', icon: OrganizationsIcon },
 ];
 
@@ -129,34 +129,64 @@ function HelpIcon() {
   );
 }
 
-// Shield Logo Component
-function ShieldLogo() {
+// BastionAuth Logo - Shield with fortress towers and key
+function BastionLogo({ size = 36 }: { size?: number }) {
   return (
-    <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="bastionGradSidebar" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#00F0FF" />
+          <stop offset="50%" stopColor="#0EA5E9" />
           <stop offset="100%" stopColor="#A855F7" />
         </linearGradient>
+        <linearGradient id="bastionGradDarkSidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#00D4E0" />
+          <stop offset="100%" stopColor="#7C3AED" />
+        </linearGradient>
       </defs>
+      {/* Shield base */}
       <path
-        d="M20 2L4 8v10c0 9.55 6.83 18.48 16 20 9.17-1.52 16-10.45 16-20V8L20 2z"
-        fill="url(#shieldGrad)"
-        opacity="0.2"
+        d="M24 4L6 10v12c0 11.46 7.68 22.04 18 24 10.32-1.96 18-12.54 18-24V10L24 4z"
+        fill="url(#bastionGradSidebar)"
+        opacity="0.15"
       />
       <path
-        d="M20 2L4 8v10c0 9.55 6.83 18.48 16 20 9.17-1.52 16-10.45 16-20V8L20 2z"
-        stroke="url(#shieldGrad)"
-        strokeWidth="1.5"
+        d="M24 4L6 10v12c0 11.46 7.68 22.04 18 24 10.32-1.96 18-12.54 18-24V10L24 4z"
+        stroke="url(#bastionGradSidebar)"
+        strokeWidth="2"
         fill="none"
       />
+      {/* Fortress towers */}
       <path
-        d="M15 19l3 3 7-7"
-        stroke="#00F0FF"
-        strokeWidth="2.5"
+        d="M14 18v-4h-2v-2h2v-1h4v1h2v2h-2v4"
+        stroke="url(#bastionGradDarkSidebar)"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
+      />
+      <path
+        d="M34 18v-4h2v-2h-2v-1h-4v1h-2v2h2v4"
+        stroke="url(#bastionGradDarkSidebar)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      {/* Key */}
+      <circle
+        cx="24"
+        cy="22"
+        r="4"
+        stroke="#00F0FF"
+        strokeWidth="2"
+        fill="none"
+      />
+      <path
+        d="M24 26v10M21 32h6M21 35h6"
+        stroke="#00F0FF"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -190,7 +220,7 @@ export function Sidebar() {
       {/* Header */}
       <div className="sidebar-header">
         <Link href="/" className="sidebar-brand">
-          <ShieldLogo />
+          <BastionLogo size={28} />
           <span className="brand-text">BastionAuth</span>
         </Link>
       </div>

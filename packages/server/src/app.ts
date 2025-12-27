@@ -9,26 +9,20 @@ import { corsConfig, env, isDevelopment } from './config/index.js';
 import { errorHandler } from './lib/errors.js';
 import { prismaPlugin, redisPlugin } from './plugins/index.js';
 import { registerRoutes } from './routes/index.js';
+import { loggerConfig } from './utils/logger.js';
+import { correlationIdMiddlewareAsync } from './middleware/correlationId.js';
 
 export async function createApp() {
   const app = fastify({
-    logger: {
-      level: env.LOG_LEVEL,
-      transport: isDevelopment
-        ? {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
-              translateTime: 'HH:MM:ss',
-              ignore: 'pid,hostname',
-            },
-          }
-        : undefined,
-    },
+    logger: loggerConfig,
     requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'requestId',
+    genReqId: () => crypto.randomUUID(),
     disableRequestLogging: false,
   });
+
+  // Add correlation ID middleware
+  app.addHook('onRequest', correlationIdMiddlewareAsync);
 
   // Security headers
   await app.register(helmet, {
@@ -94,47 +88,35 @@ export async function createApp() {
   // Error handler
   app.setErrorHandler(errorHandler);
 
-  // Request logging hook
+  // Request logging hook with correlation ID
   app.addHook('onRequest', async (request) => {
-    request.log.info({ url: request.url, method: request.method }, 'incoming request');
+    const correlationId = (request as any).correlationId || request.id;
+    request.log.info({ 
+      correlationId,
+      url: request.url, 
+      method: request.method,
+      ip: request.ip,
+    }, 'incoming request');
   });
 
-  // Response logging hook
+  // Response logging hook with structured logging
   app.addHook('onResponse', async (request, reply) => {
+    const correlationId = (request as any).correlationId || request.id;
     request.log.info(
       {
+        correlationId,
         url: request.url,
         method: request.method,
         statusCode: reply.statusCode,
         responseTime: reply.elapsedTime,
+        userAgent: request.headers['user-agent'],
+        ip: request.ip,
       },
       'request completed'
     );
   });
 
-  // Health check
-  app.get('/health', async () => {
-    const dbHealth = await app.prisma.$queryRaw`SELECT 1`
-      .then(() => 'up' as const)
-      .catch(() => 'down' as const);
-
-    const redisHealth = await app.redis
-      .ping()
-      .then(() => 'up' as const)
-      .catch(() => 'down' as const);
-
-    return {
-      status: dbHealth === 'up' && redisHealth === 'up' ? 'healthy' : 'degraded',
-      version: '0.1.0',
-      timestamp: new Date().toISOString(),
-      services: {
-        database: dbHealth,
-        redis: redisHealth,
-      },
-    };
-  });
-
-  // Register routes
+  // Register routes (includes health check routes)
   await registerRoutes(app);
 
   return app;
