@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
-import type Redis from 'ioredis';
 import crypto from 'crypto';
+import type { Redis } from 'ioredis';
 
 import { WEBHOOK_CONFIG } from '@bastionauth/core';
 import type { CreateWebhookInput, UpdateWebhookInput, WebhookEventType, WebhookPayload } from '@bastionauth/core';
@@ -98,7 +98,7 @@ export class WebhookService {
         data: {
           webhookId: webhook.id,
           eventType,
-          payload: payload as unknown as Record<string, unknown>,
+          payload: JSON.parse(JSON.stringify(payload)),
           maxAttempts: WEBHOOK_CONFIG.MAX_DELIVERY_ATTEMPTS,
         },
       });

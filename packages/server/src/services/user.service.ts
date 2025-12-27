@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 
-import type { UpdateUserInput, User } from '@bastionauth/core';
+import type { JsonValue, UpdateUserInput, User } from '@bastionauth/core';
 
 import { Errors } from '../lib/errors.js';
 import { hashPassword, verifyPassword } from '../utils/crypto.js';
@@ -284,8 +284,8 @@ export class UserService {
       username: user.username,
       imageUrl: user.imageUrl,
       mfaEnabled: user.mfaEnabled,
-      publicMetadata: user.publicMetadata as Record<string, unknown>,
-      unsafeMetadata: user.unsafeMetadata as Record<string, unknown>,
+      publicMetadata: user.publicMetadata as JsonValue,
+      unsafeMetadata: user.unsafeMetadata as JsonValue,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastSignInAt: user.lastSignInAt,

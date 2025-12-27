@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import type { KeyLike } from 'jose';
 import { importPKCS8, importSPKI, jwtVerify, SignJWT } from 'jose';
 
 import { TOKEN_CONFIG } from '@bastionauth/core';
@@ -11,13 +12,13 @@ import { env } from '../config/env.js';
 // JWT (RS256)
 // ============================================
 
-let privateKey: CryptoKey | null = null;
-let publicKey: CryptoKey | null = null;
+let privateKey: KeyLike | null = null;
+let publicKey: KeyLike | null = null;
 
 /**
  * Get the private key for signing JWTs
  */
-async function getPrivateKey(): Promise<CryptoKey> {
+async function getPrivateKey(): Promise<KeyLike> {
   if (!privateKey) {
     privateKey = await importPKCS8(env.JWT_PRIVATE_KEY, TOKEN_CONFIG.JWT_ALGORITHM);
   }
@@ -27,7 +28,7 @@ async function getPrivateKey(): Promise<CryptoKey> {
 /**
  * Get the public key for verifying JWTs
  */
-async function getPublicKey(): Promise<CryptoKey> {
+async function getPublicKey(): Promise<KeyLike> {
   if (!publicKey) {
     publicKey = await importSPKI(env.JWT_PUBLIC_KEY, TOKEN_CONFIG.JWT_ALGORITHM);
   }
