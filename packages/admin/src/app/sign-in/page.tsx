@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { GlassCard } from '@mawtech/glass-ui';
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
@@ -218,6 +218,29 @@ export default function SignInPage() {
           color: rgba(248, 250, 252, 0.4);
         }
       `}</style>
+    </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<SignInLoading />}>
+      <SignInForm />
+    </Suspense>
+  );
+}
+
+function SignInLoading() {
+  return (
+    <div className="sign-in-container" style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#0A0E14',
+      color: 'rgba(248, 250, 252, 0.6)',
+    }}>
+      Loading...
     </div>
   );
 }
