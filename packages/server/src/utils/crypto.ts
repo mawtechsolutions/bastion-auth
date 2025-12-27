@@ -44,7 +44,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
-const AUTH_TAG_LENGTH = 16;
+const _AUTH_TAG_LENGTH = 16; // Reserved for future use
 
 /**
  * Get the encryption key from environment

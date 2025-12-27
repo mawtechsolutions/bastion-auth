@@ -497,7 +497,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       const { email, redirectUrl } = request.body as { email: string; redirectUrl?: string };
 
       // Find or create user
-      let user = await fastify.prisma.user.findUnique({
+      const user = await fastify.prisma.user.findUnique({
         where: { email: email.toLowerCase() },
         select: { id: true, email: true },
       });

@@ -10,7 +10,7 @@ const OAUTH_PROVIDERS = [
   { id: 'github', name: 'GitHub', icon: GitHubIcon },
 ];
 
-export function OAuthButtons({ mode }: OAuthButtonsProps) {
+export function OAuthButtons({ mode: _mode }: OAuthButtonsProps) {
   const { client } = useBastionContext();
 
   return (

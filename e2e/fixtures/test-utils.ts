@@ -187,3 +187,4 @@ export async function takeScreenshot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `e2e/screenshots/${name}-${timestamp}.png` });
 }
 
+

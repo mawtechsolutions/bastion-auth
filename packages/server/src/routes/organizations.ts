@@ -36,7 +36,7 @@ export async function organizationsRoutes(app: FastifyInstance) {
   // Middleware to check org membership
   async function requireMembership(
     request: FastifyRequest<{ Params: { orgId: string } }>,
-    reply: FastifyReply
+    _reply: FastifyReply
   ) {
     const { orgId } = request.params;
     const userId = request.user?.id;

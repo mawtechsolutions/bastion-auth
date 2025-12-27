@@ -2,7 +2,7 @@ import type { PrismaClient } from '@prisma/client';
 import type Redis from 'ioredis';
 import crypto from 'crypto';
 
-import { WEBHOOK_CONFIG, WEBHOOK_EVENTS } from '@bastionauth/core';
+import { WEBHOOK_CONFIG } from '@bastionauth/core';
 import type { CreateWebhookInput, UpdateWebhookInput, WebhookEventType, WebhookPayload } from '@bastionauth/core';
 
 import { Errors } from '../lib/errors.js';

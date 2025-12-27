@@ -610,3 +610,4 @@ Enable debug logging:
 
 This will log authentication state changes and API calls to the console.
 
+

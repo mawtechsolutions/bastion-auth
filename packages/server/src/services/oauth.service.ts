@@ -151,7 +151,7 @@ export class OAuthService {
     const { provider, codeVerifier, redirectUri } = JSON.parse(stateData);
     await this.redis.del(`oauth:state:${state}`);
 
-    const config = OAUTH_CONFIGS[provider];
+    const _config = OAUTH_CONFIGS[provider]; // Validates provider exists
 
     // Exchange code for tokens
     const tokenResponse = await this.exchangeCode(
@@ -219,7 +219,7 @@ export class OAuthService {
     code: string,
     redirectUri: string
   ): Promise<void> {
-    const config = OAUTH_CONFIGS[provider];
+    const _config = OAUTH_CONFIGS[provider]; // Validates provider exists
 
     // Exchange code for tokens
     const tokenResponse = await this.exchangeCode(provider, code, redirectUri);

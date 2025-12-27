@@ -2,7 +2,6 @@ import type { PrismaClient } from '@prisma/client';
 import type Redis from 'ioredis';
 
 import {
-  AUDIT_ACTIONS,
   EMAIL_CONFIG,
   MFA_CONFIG,
   PASSWORD_CONFIG,
@@ -20,7 +19,6 @@ import type {
 import { Errors } from '../lib/errors.js';
 import {
   decrypt,
-  encrypt,
   hashPassword,
   hashSha256,
   verifyPassword,

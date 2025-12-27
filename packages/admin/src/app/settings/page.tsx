@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GlassCard, GlassButton, GlassInput } from '@mawtech/glass-ui';
+import { GlassCard, GlassButton } from '@mawtech/glass-ui';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general');

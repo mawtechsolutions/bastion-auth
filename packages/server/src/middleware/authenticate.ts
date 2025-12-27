@@ -41,7 +41,7 @@ function extractBearerToken(authHeader: string | undefined): string | null {
 /**
  * Authentication middleware - requires valid access token
  */
-export async function authenticate(request: FastifyRequest, reply: FastifyReply) {
+export async function authenticate(request: FastifyRequest, _reply: FastifyReply) {
   const token = extractBearerToken(request.headers.authorization);
 
   if (!token) {
