@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { GlassCard } from '@mawtech/glass-ui';
 
 function SignInForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
   
@@ -48,9 +47,9 @@ function SignInForm() {
         document.cookie = `bastionauth_token=${accessToken}; path=/; max-age=3600; SameSite=Lax`;
       }
 
-      // Redirect to dashboard or original destination
-      router.push(redirect);
-      router.refresh();
+      // Use hard redirect to ensure cookies are sent with the request
+      // router.push does soft navigation which may not trigger middleware with new cookies
+      window.location.href = redirect;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {
