@@ -41,9 +41,11 @@ function SignInForm() {
       }
 
       // Store token in cookie for middleware
-      if (data.accessToken) {
-        document.cookie = `__session=${data.accessToken}; path=/; max-age=3600; SameSite=Lax`;
-        document.cookie = `bastionauth_token=${data.accessToken}; path=/; max-age=3600; SameSite=Lax`;
+      // API returns tokens in data.tokens.accessToken
+      const accessToken = data.tokens?.accessToken || data.accessToken;
+      if (accessToken) {
+        document.cookie = `__session=${accessToken}; path=/; max-age=3600; SameSite=Lax`;
+        document.cookie = `bastionauth_token=${accessToken}; path=/; max-age=3600; SameSite=Lax`;
       }
 
       // Redirect to dashboard or original destination
